@@ -43,9 +43,11 @@
           { role: "user", content: idee + (contexte ? "\n\nContexte des autres agents:\n" + contexte : "") }
         ]
       })
-    });
-    const data = await reponse.json();
-    return data.choices[0].message.content;
+    });const data = await reponse.json();
+if (!data.choices) {
+  return "ERREUR OPENROUTER : " + JSON.stringify(data);
+}
+return data.choices[0].message.content;
   }
 
   async function lancer() {
