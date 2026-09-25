@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facilita</title>
+<style>
+  body { font-family: Arial; max-width: 700px; margin: 15px auto; padding: 10px; background:#f4f4f4; }
+  h1 { font-size: 22px; text-align:center; }
+  textarea { width: 100%; height: 90px; padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+  button { margin-top: 10px; padding: 14px; width: 100%; font-size: 16px; background: #111; color: #fff; border: none; border-radius: 8px; }
+  button:disabled { background: #888; }
+  .agent { margin-top: 15px; padding: 12px; background: #fff; border-radius: 8px; white-space: pre-wrap; }
+  .nom { font-weight: bold; color: #111; display:block; margin-bottom:6px; }
+</style>
+</head>
+<body>
+
+<h1>Facilita</h1>
+
+<textarea id="idee" placeholder="Écris ton idée ici..."></textarea>
+<button id="btn" onclick="lancer()">Faire travailler l'équipe</button>
+
+<div id="marketing" class="agent"></div>
+<div id="consultant" class="agent"></div>
+<div id="critique" class="agent"></div>
+
+<script>
+  // ⚠️ COLLE TA CLÉ ICI, ENTRE LES GUILLEMETS
+  const CLE_API = "COLLE CA ICI";
+
+  async function appelerAgent(role, idee, contexte) {
+    const reponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + CLE_API,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "openrouter/free",
+        messages: [
+          { role: "system", content: role },
+          { role: "user", content: idee + (contexte ? "\n\nContexte des autres agents:\n" + contexte : "") }
+        ]
+      })
+    });
+    const data = await reponse.json();
+    return data.choices[0].message.content;
+  }
+
+  async function lancer() {
+    const idee = document.getElementById("idee").value.trim();
+    if (!idee) return;
+
+    const btn = document.getElementById("btn");
+    btn.disabled = true;
+
+    const m = document.getElementById("marketing");
+    const c = document.getElementById("consultant");
+    const k = document.getElementById("critique");
+
+    m.textContent = ""; c.textContent = ""; k.textContent = "";
+
+    try {
+      // Agent 1 : Directeur Marketing (spécialisé RDC + services)
+      m.innerHTML = '<span class="nom">Directeur Marketing</span>Réflexion...';
+      const rep1 = await appelerAgent(
+        "Tu es un directeur marketing expérimenté, spécialisé en Afrique centrale et en RDC (Lubumbashi, Kolwezi). Tu connais les réalités locales : prix en CDF et USD, habitudes des clients, canaux de vente (WhatsApp, bouche-à-oreille, Facebook, marchés). Tu maîtrises les services de nettoyage, entretien de meubles et tissus (type Facilita Life), ainsi que le secteur du trading. Propose des idées concrètes pour trouver des clients et vendre. Sois direct, pas de blabla.",
+        idee
+      );
+      m.innerHTML = '<span class="nom">Directeur Marketing</span>' + rep1;
+
+      // Agent 2 : Consultant (spécialisé RDC + risque)
+      c.innerHTML = '<span class="nom">Consultant</span>Réflexion...';
+      const rep2 = await appelerAgent(
+        "Tu es un consultant en stratégie, spécialisé en RDC et en Afrique centrale. Tu analyses la faisabilité d'un projet : coûts réels en CDF/USD, risques locaux (logistique, pouvoir d'achat, concurrence), cadre légal, et prochaines étapes concrètes. Pour tout ce qui touche au trading, tu insistes sur la gestion du risque et tu ne présentes jamais une stratégie comme une garantie de gain. Sois direct et réaliste.",
+        idee,
+        "Marketing: " + rep1
+      );
+      c.innerHTML = '<span class="nom">Consultant</span>' + rep2;
+
+      // Agent 3 : Critique
+      k.innerHTML = '<span class="nom">Critique</span>Réflexion...';
+      const rep3 = await appelerAgent(
+        "Tu es un critique sévère mais constructif. Tu trouves les faiblesses, les angles morts, les incohérences et ce qui peut faire échouer le projet. Tu tiens compte du contexte RDC (Lubumbashi, Kolwezi), des contraintes locales et des limites de l'entrepreneur débutant. Ne valide rien gratuitement. Termine toujours par une suggestion concrète pour améliorer.",
+        idee,
+        "Marketing: " + rep1 + "\n\nConsultant: " + rep2
+      );
+      k.innerHTML = '<span class="nom">Critique</span>' + rep3;
+
+    } catch (e) {
+      m.textContent = "Erreur : " + e.message;
+    }
+
+    btn.disabled = false;
+  }
+</script>
+
+</body>
+</html>
