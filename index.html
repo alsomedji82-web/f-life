@@ -26,28 +26,19 @@
 <div id="critique" class="agent"></div>
 
 <script>
-  // ⚠️ COLLE TA CLÉ ICI, ENTRE LES GUILLEMETS
-  const CLE_API = "COLLETA CLÉICI";
-
   async function appelerAgent(role, idee, contexte) {
-    const reponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const reponse = await fetch("https://f-life-api.vercel.app/api/chat", {
       method: "POST",
       headers: {
-        "Authorization": "Bearer " + CLE_API,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        model: "openrouter/free",
-        messages: [
-          { role: "system", content: role },
-          { role: "user", content: idee + (contexte ? "\n\nContexte des autres agents:\n" + contexte : "") }
-        ]
-      })
-    });const data = await reponse.json();
-if (!data.choices) {
-  return "ERREUR OPENROUTER : " + JSON.stringify(data);
-}
-return data.choices[0].message.content;
+      body: JSON.stringify({ role, idee, contexte })
+    });
+    const data = await reponse.json();
+    if (!data.choices) {
+      return "ERREUR : " + JSON.stringify(data);
+    }
+    return data.choices[0].message.content;
   }
 
   async function lancer() {
