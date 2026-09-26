@@ -11,7 +11,7 @@
   button { margin-top: 10px; padding: 14px; width: 100%; font-size: 16px; background: #111; color: #fff; border: none; border-radius: 8px; }
   button:disabled { background: #888; }
   .agent { margin-top: 15px; padding: 12px; background: #fff; border-radius: 8px; white-space: pre-wrap; }
-  .nom { font-weight: bold; color: #111; display:block; margin-bottom:6px; }
+  .nom { font-weight: bold; color: #111; display:block; margin-bottom:6px; font-size: 17px; }
 </style>
 </head>
 <body>
@@ -26,6 +26,17 @@
 <div id="critique" class="agent"></div>
 
 <script>
+  // Nettoie le texte : enlève astérisques, dièses, tirets Markdown
+  function nettoyer(texte) {
+    if (!texte) return "";
+    return texte
+      .replace(/\*\*/g, "")
+      .replace(/\*/g, "")
+      .replace(/^#+\s*/gm, "")
+      .replace(/^-\s+/gm, "• ")
+      .trim();
+  }
+
   async function appelerAgent(role, idee, contexte) {
     const reponse = await fetch("https://f-life-api.vercel.app/api/chat", {
       method: "POST",
@@ -38,7 +49,7 @@
     if (!data.choices) {
       return "ERREUR : " + JSON.stringify(data);
     }
-    return data.choices[0].message.content;
+    return nettoyer(data.choices[0].message.content);
   }
 
   async function lancer() {
@@ -55,31 +66,31 @@
     m.textContent = ""; c.textContent = ""; k.textContent = "";
 
     try {
-      // Agent 1 : Directeur Marketing (spécialisé RDC + services)
-      m.innerHTML = '<span class="nom">Directeur Marketing</span>Réflexion...';
+      // Rose — Directrice Marketing
+      m.innerHTML = '<span class="nom">Rose — Directrice Marketing</span>Réflexion...';
       const rep1 = await appelerAgent(
-        "Tu es un directeur marketing expérimenté, spécialisé en Afrique centrale et en RDC (Lubumbashi, Kolwezi). Tu connais les réalités locales : prix en CDF et USD, habitudes des clients, canaux de vente (WhatsApp, bouche-à-oreille, Facebook, marchés). Tu maîtrises les services de nettoyage, entretien de meubles et tissus (type Facilita Life), ainsi que le secteur du trading. Propose des idées concrètes pour trouver des clients et vendre. Sois direct, pas de blabla.",
+        "Tu es Rose, directrice marketing expérimentée, spécialisée en Afrique centrale et en RDC (Lubumbashi, Kolwezi). Tu connais les réalités locales : prix en CDF et USD, habitudes des clients, canaux de vente (WhatsApp, bouche-à-oreille, Facebook, marchés). Tu maîtrises les services de nettoyage, entretien de meubles et tissus, ainsi que le trading. RÈGLES : Écris en texte simple, SANS astérisques, SANS dièses, SANS puces Markdown. Donne maximum 3 actions concrètes, avec des prix en CDF. Termine par une phrase de démarchage prête à envoyer à un client.",
         idee
       );
-      m.innerHTML = '<span class="nom">Directeur Marketing</span>' + rep1;
+      m.innerHTML = '<span class="nom">Rose — Directrice Marketing</span>' + rep1;
 
-      // Agent 2 : Consultant (spécialisé RDC + risque)
-      c.innerHTML = '<span class="nom">Consultant</span>Réflexion...';
+      // Hugor — Consultant stratégie
+      c.innerHTML = '<span class="nom">Hugor — Consultant stratégie</span>Réflexion...';
       const rep2 = await appelerAgent(
-        "Tu es un consultant en stratégie, spécialisé en RDC et en Afrique centrale. Tu analyses la faisabilité d'un projet : coûts réels en CDF/USD, risques locaux (logistique, pouvoir d'achat, concurrence), cadre légal, et prochaines étapes concrètes. Pour tout ce qui touche au trading, tu insistes sur la gestion du risque et tu ne présentes jamais une stratégie comme une garantie de gain. Sois direct et réaliste.",
+        "Tu es Hugor, consultant en stratégie, spécialisé en RDC et en Afrique centrale. Tu analyses la faisabilité d'un projet : coûts réels en CDF et USD, risques locaux (logistique, pouvoir d'achat, concurrence), cadre légal, et prochaines étapes concrètes. Pour le trading, tu insistes sur la gestion du risque et tu ne présentes jamais une stratégie comme une garantie de gain. RÈGLES : Écris en texte simple, SANS astérisques, SANS dièses, SANS puces Markdown. Donne des chiffres précis (coûts, délais, marges). Termine par UNE seule recommandation claire.",
         idee,
-        "Marketing: " + rep1
+        "Marketing (Rose): " + rep1
       );
-      c.innerHTML = '<span class="nom">Consultant</span>' + rep2;
+      c.innerHTML = '<span class="nom">Hugor — Consultant stratégie</span>' + rep2;
 
-      // Agent 3 : Critique
-      k.innerHTML = '<span class="nom">Critique</span>Réflexion...';
+      // Orchidée — Critique
+      k.innerHTML = '<span class="nom">Orchidée — Critique</span>Réflexion...';
       const rep3 = await appelerAgent(
-        "Tu es un critique sévère mais constructif. Tu trouves les faiblesses, les angles morts, les incohérences et ce qui peut faire échouer le projet. Tu tiens compte du contexte RDC (Lubumbashi, Kolwezi), des contraintes locales et des limites de l'entrepreneur débutant. Ne valide rien gratuitement. Termine toujours par une suggestion concrète pour améliorer.",
+        "Tu es Orchidée, critique sévère mais constructif. Tu trouves les faiblesses, les angles morts, les incohérences et ce qui peut faire échouer le projet. Tu tiens compte du contexte RDC (Lubumbashi, Kolwezi), des contraintes locales et des limites de l'entrepreneur débutant. RÈGLES : Écris en texte simple, SANS astérisques, SANS dièses, SANS puces Markdown. Donne maximum 3 faiblesses, et pour chacune, une correction concrète. Ne valide rien gratuitement.",
         idee,
-        "Marketing: " + rep1 + "\n\nConsultant: " + rep2
+        "Marketing (Rose): " + rep1 + "\n\nConsultant (Hugor): " + rep2
       );
-      k.innerHTML = '<span class="nom">Critique</span>' + rep3;
+      k.innerHTML = '<span class="nom">Orchidée — Critique</span>' + rep3;
 
     } catch (e) {
       m.textContent = "Erreur : " + e.message;
